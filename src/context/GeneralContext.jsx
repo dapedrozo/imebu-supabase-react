@@ -7,12 +7,24 @@ import { supabase } from "../supabase/client";
 export const GeneralContext = createContext();
 
 export function GeneralContextProvider(props) {
+    const useSessionStorage = (storageKey, fallbackState="") => {
+      const [value, setValue] = useState(
+        JSON.parse(sessionStorage.getItem(storageKey)) ?? fallbackState
+          );
+          useEffect(() => {
+            sessionStorage.setItem(storageKey, JSON.stringify(value));
+          }, [value, storageKey]);
+          return [value, setValue];
+    };
+
     const MySwal = withReactContent(Swal);
     const navigate = useNavigate();
 
     const [sendingLogin, setSendingLogin] = useState(false)
-
+    const [currentNameUser, setCurrentNameUser] = useSessionStorage("username")
+    const [currentTipoUser, setCurrentTipoUser] = useSessionStorage("tipoUser")
     async function errorHandler(error) {
+      console.log(error);
       const map={
         'Invalid login credentials':function(){
           setSendingLogin(false)
@@ -45,6 +57,18 @@ export function GeneralContextProvider(props) {
             html: (
               <i>
                 Upps... parece que las contraseñas no coinciden, digitalas nuevamente
+              </i>
+            ),
+            icon: "error",
+          }) 
+        },
+        'Email not confirmed':function(){
+          setSendingLogin(false)
+          return MySwal.fire({
+            title: <strong>Error!</strong>,
+            html: (
+              <i>
+                Upps... parece que aún no has confirmado tu email, por favor ingresa a tu email y confirma tu registro
               </i>
             ),
             icon: "error",
@@ -162,23 +186,44 @@ export function GeneralContextProvider(props) {
       }
     }
 
-    async function verifyUser(id){
+    async function verifyUserPersonaGeneralPerfil(id){
       try {
         let { data: persona_general_perfil, error } = await supabase
           .from('persona_general_perfil')
-          .select('')
-          .eq('usuario',id)
+          .select('nombres')
+          .eq('id_usuario',id)
         if(error) throw error
         return persona_general_perfil
       } catch (error) {
         await errorHandler(error)
       }
     }
-    async function getSession(){
+    async function verifyUserEmpresaGeneralPerfil(id){
+      try {
+        let { data: empresa_general_perfil, error } = await supabase
+          .from('empresa_general_perfil')
+          .select('nombre_empresa')
+          .eq('id_usuario',id)
+        if(error) throw error
+        return empresa_general_perfil
+      } catch (error) {
+        await errorHandler(error)
+      }
+    }
+    async function getSession(urlTo=null){
       try {
         const { data, error } = await supabase.auth.getSession()
-        if(error)throw error 
-        return data     
+        if(error)throw error
+        if(data.session===null){
+          if(urlTo==="registro-empresa" || urlTo==="registro-persona"){
+            return navigate(urlTo)
+          }
+          return navigate("/login")
+        }
+        if((currentTipoUser==="persona") && (urlTo) && (urlTo.includes("empleo-joven"))){
+          return navigate("/")
+        }
+        return data
       } catch (error) {
         await errorHandler(error)
       }
@@ -197,11 +242,18 @@ export function GeneralContextProvider(props) {
     } 
     async function login(user){
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: user.password,
-        })
+        const { data, error } = await supabase.auth.signInWithPassword(user)
         if(error) throw error
+        const personaVerified = await verifyUserPersonaGeneralPerfil(data.user.id)
+        const empresaVerified = await verifyUserEmpresaGeneralPerfil(data.user.id)
+        if(personaVerified.length>0){
+          setCurrentNameUser(personaVerified[0].nombres)
+          setCurrentTipoUser("persona")
+        } else if(empresaVerified.length>0){
+          setCurrentNameUser(empresaVerified[0].nombre_empresa)
+          setCurrentTipoUser("empresa")
+        }
+        navigate("/")
       } catch (error) {
         await errorHandler(error)
       }
@@ -210,6 +262,10 @@ export function GeneralContextProvider(props) {
       try {
         const { error } = await supabase.auth.signOut()
         if(error) throw error
+        setCurrentNameUser("")
+        setCurrentTipoUser("")
+        setSendingLogin(false)
+        navigate("/login")
       } catch (error) {
         await errorHandler(error)
       }
@@ -337,11 +393,14 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
+    
 
     return (
     <GeneralContext.Provider 
     value={{
       sendingLogin,
+      currentNameUser,
+      currentTipoUser,
       setSendingLogin,
       getTiposDocumento,
       getTipoPersonaBanca,
@@ -356,7 +415,8 @@ export function GeneralContextProvider(props) {
       login,
       signOutUser,
       registerPersonaGeneral,
-      registerEmpresaGeneral
+      registerEmpresaGeneral,
+      getSession,
     }}>
     {props.children}
     </GeneralContext.Provider>
