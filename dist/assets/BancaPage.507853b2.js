@@ -1,0 +1,1 @@
+import{j as e}from"./index.b7187d75.js";function n(){return e("div",{children:"hola"})}function a(){return e(n,{})}function i(){return e("div",{style:{minHeight:"51vh"},children:e(a,{})})}export{i as default};

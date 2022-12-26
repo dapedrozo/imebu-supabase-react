@@ -3,19 +3,17 @@ import {GeneralContext} from '../../context/GeneralContext';
 import {useNavigate} from 'react-router-dom';
 
 function SignUpPersona() {
-  const {validateUserActive, setSendingLogin, sendingLogin, getTiposDocumento, registerPersonaGeneral} = useContext(GeneralContext)
+  const {setSendingLogin, sendingLogin, getTiposDocumento, registerPersonaGeneral} = useContext(GeneralContext)
   const navigate = useNavigate()
 
-  const [usuarioRegister, setUsuarioRegister] = useState([{
-    tipo_documento:"",
-    numero_documento:"",
-    telefono_1:"",
-    politica_tratamiento:false,
-    acepto_terminos:false,
-  }])
   const [personaRegister, setPersonaRegister] = useState([{
     nombres:"",
     apellidos:"",
+    tipo_doc:"",
+    num_doc:"",
+    telefono1:"",
+    politica_tratamiento:false,
+    acepto_terminos_condiciones:false,
   }])
   const [authRegister, setAuthRegister] = useState([{
     email:"",
@@ -24,12 +22,6 @@ function SignUpPersona() {
   }])
   const [tiposDocView, setTiposDocView] = useState([])
 
-  const handleUsuarioRegisterChange=(e, index)=>{
-    const { name, value } = e.target;
-    const list = [...usuarioRegister]
-    list[index][name]=value
-    setUsuarioRegister(list)
-  }
   const handlePersonaRegisterChange=(e, index)=>{
     const { name, value } = e.target;
     const list = [...personaRegister]
@@ -44,22 +36,22 @@ function SignUpPersona() {
   }
   const handlePersonaRegisterCheckTerms=(e, index)=>{
     const {name}=e.target
-    const list = [...usuarioRegister]
+    const list = [...personaRegister]
     list[index][name]=e.target.checked
-    setUsuarioRegister(list)
+    setPersonaRegister(list)
   }
 
   const submitRegisterPersona = async (e) =>{
     e.preventDefault()
     setSendingLogin(true)
-    await registerPersonaGeneral(personaRegister[0], authRegister[0], usuarioRegister[0])
+    await registerPersonaGeneral(personaRegister[0], authRegister[0])
   }
 
   const loadData=async()=>{
     const tiposDoc = await getTiposDocumento()
     setTiposDocView(tiposDoc)
-    usuarioRegister[0].tipo_documento = tiposDoc[0].nombre_documento;
-    setUsuarioRegister(usuarioRegister)
+    personaRegister[0].tipo_doc = tiposDoc[0].tipo_doc;
+    setPersonaRegister(personaRegister)
   }
 
   useEffect(() => {
@@ -79,22 +71,22 @@ function SignUpPersona() {
           <form onSubmit={(e)=>submitRegisterPersona(e)}>
             <div className="row">
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="tipoDocumento" className="form-label">Tipo Documento</label>
+                <label htmlFor="tipo_doc" className="form-label">Tipo Documento</label>
                 {
-                usuarioRegister.map((element, index)=>(
-                  <select key={index} className='form-select' id="opcionTipoDocumento" name="tipo_documento" onChange={(e) => handleUsuarioRegisterChange(e, index)} value={element.tipo_documento}>
+                personaRegister.map((element, index)=>(
+                  <select key={index} className='form-select' id="tipo_doc" name="tipo_doc" onChange={(e) => handlePersonaRegisterChange(e, index)} value={element.tipo_doc}>
                   {tiposDocView.map((elemento, index)=>(
-                      <option key={index} value={elemento.nombre_documento}>{elemento.nombre_documento}</option>
+                      <option key={index} value={elemento.tipo_doc}>{elemento.tipo_doc}</option>
                   ))}
                   </select>
                 ))
                 }
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="numero_documento" className="form-label">Número Documento</label>
+                <label htmlFor="num_doc" className="form-label">Número Documento</label>
                 {
-                  usuarioRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='numero_documento' id="numero_documento" onChange={(e)=>handleUsuarioRegisterChange(e, index)} value={element.numero_documento}/>
+                  personaRegister.map((element, index)=>(
+                  <input key={index} type="text" className="form-control" required name='num_doc' id="num_doc" onChange={(e)=>handlePersonaRegisterChange(e, index)} value={element.num_doc}/>
                   ))
                 }
               </div>
@@ -115,10 +107,10 @@ function SignUpPersona() {
                 }
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="telefono_1" className="form-label">Teléfono</label>
+                <label htmlFor="telefono1" className="form-label">Teléfono</label>
                 {
-                  usuarioRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='telefono_1' id="telefono_1" onChange={(e)=>handleUsuarioRegisterChange(e, index)} value={element.telefono_1}/>
+                  personaRegister.map((element, index)=>(
+                  <input key={index} type="text" className="form-control" required name='telefono1' id="telefono1" onChange={(e)=>handlePersonaRegisterChange(e, index)} value={element.telefono1}/>
                   ))
                 }
               </div>
@@ -153,17 +145,17 @@ function SignUpPersona() {
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-start">
               {
-                  usuarioRegister.map((element, index)=>(
-                    element.acepto_terminos === true ? (
+                  personaRegister.map((element, index)=>(
+                    element.acepto_terminos_condiciones === true ? (
                       <div className="form-check" key={index}>
-                        <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault"+index} name='acepto_terminos' onClick={(e)=>handlePersonaRegisterCheckTerms(e, index)}/>
+                        <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault"+index} name='acepto_terminos_condiciones' onClick={(e)=>handlePersonaRegisterCheckTerms(e, index)}/>
                         <label className="form-check-label" htmlFor={"flexCheckDefault"+index}>
                         Acepta términos y condiciones?
                         </label>
                       </div>
                     ) : (
                       <div className="form-check" key={index}>
-                        <input className="form-check-input is-invalid" required type="checkbox" id={"flexCheckDefault2"+index} name='acepto_terminos' onClick={(e)=>handlePersonaRegisterCheckTerms(e, index)}/>
+                        <input className="form-check-input is-invalid" required type="checkbox" id={"flexCheckDefault2"+index} name='acepto_terminos_condiciones' onClick={(e)=>handlePersonaRegisterCheckTerms(e, index)}/>
                         <label className="form-check-label" htmlFor={"flexCheckDefault2"+index}>
                         Acepta términos y condiciones?
                         </label>
@@ -175,7 +167,7 @@ function SignUpPersona() {
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12 mb-4 text-start">
               {
-                  usuarioRegister.map((element, index)=>(
+                  personaRegister.map((element, index)=>(
                     element.politica_tratamiento === true ? (
                       <div className="form-check" key={index}>
                         <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault3"+index} name='politica_tratamiento' onClick={(e)=>handlePersonaRegisterCheckTerms(e, index)}/>
@@ -196,7 +188,7 @@ function SignUpPersona() {
                 }
               </div>
             </div>
-            {(sendingLogin || usuarioRegister[0].numero_documento==="" || personaRegister[0].nombres==="" || personaRegister[0].apellidos==="" || usuarioRegister[0].telefono_1==="" || usuarioRegister[0].politica_tratamiento===false || usuarioRegister[0].acepto_terminos===false || authRegister[0].email==="" || authRegister[0].password!==authRegister[0].confirm_password) ? (
+            {(sendingLogin || personaRegister[0].num_doc==="" || personaRegister[0].nombres==="" || personaRegister[0].apellidos==="" || personaRegister[0].telefono1==="" || personaRegister[0].politica_tratamiento===false || personaRegister[0].acepto_terminos_condiciones===false || authRegister[0].email==="" || authRegister[0].password!==authRegister[0].confirm_password) ? (
               <div className="d-grid gap-2">
                 <button className='btn btn-lg' disabled style={{backgroundColor: "#3366CC", color:"white"}}>Registrarme</button>
               </div>

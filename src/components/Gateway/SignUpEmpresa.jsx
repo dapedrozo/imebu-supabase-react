@@ -3,16 +3,9 @@ import {GeneralContext} from '../../context/GeneralContext';
 import {useNavigate} from 'react-router-dom';
 
 function SignUpEmpresa() {
-  const {login, validateUserActive, setSendingLogin, sendingLogin, getTiposDocumento, getCiiu, registerEmpresaGeneral} = useContext(GeneralContext)
+  const {setSendingLogin, sendingLogin, getTiposDocumento, getCiiu, registerEmpresaGeneral} = useContext(GeneralContext)
   const navigate = useNavigate()
   
-  const [usuarioRegister, setUsuarioRegister] = useState([{
-    tipo_documento:"",
-    numero_documento:"",
-    telefono_1:"",
-    politica_tratamiento:false,
-    acepto_terminos:false,
-  }])
   const [authRegister, setAuthRegister] = useState([{
     email:"",
     password:"",
@@ -20,19 +13,18 @@ function SignUpEmpresa() {
   }])
   const [empresaRegister, setEmpresaRegister] = useState([{
     nombre_empresa:"",
-    nombres_representante:"",
-    apellidos_representante:"",
-    ciiu:"",
+    nombre_representante:"",
+    apellidos_representatnte:"",
+    numero_ciuu:"",
+    tipo_doc:"",
+    num_doc:"",
+    telefono1:"",
+    politica_tratamiento:false,
+    acepto_terminos_condiciones:false,
   }])
   const [tiposDocView, setTiposDocView] = useState([])
   const [ciiuView, setCiiuView] = useState([])
 
-  const handleUsuarioRegisterChange=(e, index)=>{
-    const { name, value } = e.target;
-    const list = [...usuarioRegister]
-    list[index][name]=value
-    setUsuarioRegister(list)
-  }
   const handleAuthRegisterChange=(e, index)=>{
     const { name, value } = e.target;
     const list = [...authRegister]
@@ -47,15 +39,15 @@ function SignUpEmpresa() {
   }
   const handleEmpresaRegisterCheckTerms=(e, index)=>{
     const {name}=e.target
-    const list = [...usuarioRegister]
+    const list = [...empresaRegister]
     list[index][name]=e.target.checked
-    setUsuarioRegister(list)
+    setEmpresaRegister(list)
   }
 
   const submitRegisterEmpresa = (e) =>{
     e.preventDefault()
     setSendingLogin(true)
-    registerEmpresaGeneral(empresaRegister[0], authRegister[0], usuarioRegister[0])
+    registerEmpresaGeneral(empresaRegister[0], authRegister[0])
   }
 
   const loadData=async()=>{
@@ -63,9 +55,8 @@ function SignUpEmpresa() {
     const ciius = await getCiiu()
     setTiposDocView(tiposDoc)
     setCiiuView(ciius)
-    usuarioRegister[0].tipo_documento = tiposDoc[0].nombre_documento;
-    setUsuarioRegister(usuarioRegister)
-    empresaRegister[0].ciiu = ciius[0].nombre_ciiu;
+    empresaRegister[0].tipo_doc = tiposDoc[0].tipo_doc;
+    empresaRegister[0].numero_ciuu = ciius[0].numero_ciuu;
     setEmpresaRegister(empresaRegister)
   }
 
@@ -88,7 +79,7 @@ function SignUpEmpresa() {
                   <label htmlFor="nombre_empresa" className="form-label">Nombre de la empresa</label>
                   {
                     empresaRegister.map((element, index)=>(
-                    <input key={index} type="text" className="form-control" required name='nombre_empresa' id="nombre_empresa" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.nombres}/>
+                    <input key={index} type="text" className="form-control" required name='nombre_empresa' id="nombre_empresa" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.nombre_empresa}/>
                     ))
                   }
               </div>
@@ -96,9 +87,9 @@ function SignUpEmpresa() {
                 <label htmlFor="ciiu" className="form-label">Código CIIU</label>
                 {
                 empresaRegister.map((element, index)=>(
-                  <select key={index} className='form-select' id="opcionCiiu" name="ciiu" onChange={(e) => handleEmpresaRegisterChange(e, index)} value={element.ciiu}>
+                  <select key={index} className='form-select' id="numero_ciuu" name="numero_ciuu" onChange={(e) => handleEmpresaRegisterChange(e, index)} value={element.numero_ciuu}>
                   {ciiuView.map((elemento, index)=>(
-                      <option key={index} value={elemento.nombre_ciiu}>{elemento.nombre_ciiu}</option>
+                      <option key={index} value={elemento.numero_ciuu}>{elemento.numero_ciuu} - {elemento.nombre_ciuu}</option>
                   ))}
                   </select>
                 ))
@@ -107,10 +98,10 @@ function SignUpEmpresa() {
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
                 <label htmlFor="tipoDocumento" className="form-label">Tipo Documento</label>
                 {
-                usuarioRegister.map((element, index)=>(
-                  <select key={index} className='form-select' id="opcionTipoDocumento" name="tipo_documento" onChange={(e) => handleUsuarioRegisterChange(e, index)} value={element.tipo_documento}>
+                empresaRegister.map((element, index)=>(
+                  <select key={index} className='form-select' id="tipo_doc" name="tipo_doc" onChange={(e) => handleEmpresaRegisterChange(e, index)} value={element.tipo_doc}>
                   {tiposDocView.map((elemento, index)=>(
-                      <option key={index} value={elemento.nombre_documento}>{elemento.nombre_documento}</option>
+                      <option key={index} value={elemento.tipo_doc}>{elemento.tipo_doc}</option>
                   ))}
                   </select>
                 ))
@@ -119,32 +110,32 @@ function SignUpEmpresa() {
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
                 <label htmlFor="numero_documento" className="form-label">Número Documento</label>
                 {
-                  usuarioRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='numero_documento' id="numero_documento" onChange={(e)=>handleUsuarioRegisterChange(e, index)} value={element.numero_documento}/>
+                  empresaRegister.map((element, index)=>(
+                  <input key={index} type="text" className="form-control" required name='num_doc' id="num_doc" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.num_doc}/>
                   ))
                 }
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="nombres_representante" className="form-label">Nombres del representante legal</label>
+                <label htmlFor="nombre_representante" className="form-label">Nombres del representante legal</label>
                 {
                   empresaRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='nombres_representante' id="nombres_representante" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.nombres}/>
+                  <input key={index} type="text" className="form-control" required name='nombre_representante' id="nombre_representante" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.nombre_representante}/>
                   ))
                 }
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="apellidos_representante" className="form-label">Apellidos del representante legal</label>
+                <label htmlFor="apellidos_representatnte" className="form-label">Apellidos del representante legal</label>
                 {
                   empresaRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='apellidos_representante' id="apellidos_representante" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.apellidos}/>
+                  <input key={index} type="text" className="form-control" required name='apellidos_representatnte' id="apellidos_representatnte" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.apellidos_representatnte}/>
                   ))
                 }
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-6">
-                <label htmlFor="telefono_1" className="form-label">Teléfono</label>
+                <label htmlFor="telefono1" className="form-label">Teléfono</label>
                 {
-                  usuarioRegister.map((element, index)=>(
-                  <input key={index} type="text" className="form-control" required name='telefono_1' id="telefono_1" onChange={(e)=>handleUsuarioRegisterChange(e, index)} value={element.telefono_1}/>
+                  empresaRegister.map((element, index)=>(
+                  <input key={index} type="text" className="form-control" required name='telefono1' id="telefono1" onChange={(e)=>handleEmpresaRegisterChange(e, index)} value={element.telefono1}/>
                   ))
                 }
               </div>
@@ -179,17 +170,17 @@ function SignUpEmpresa() {
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12 text-start">
               {
-                  usuarioRegister.map((element, index)=>(
-                    element.acepto_terminos === true ? (
+                  empresaRegister.map((element, index)=>(
+                    element.acepto_terminos_condiciones === true ? (
                       <div className="form-check" key={index}>
-                        <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault"+index} name='acepto_terminos' onClick={(e)=>handleEmpresaRegisterCheckTerms(e, index)}/>
+                        <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault"+index} name='acepto_terminos_condiciones' onClick={(e)=>handleEmpresaRegisterCheckTerms(e, index)}/>
                         <label className="form-check-label" htmlFor={"flexCheckDefault"+index}>
                         Acepta términos y condiciones?
                         </label>
                       </div>
                     ) : (
                       <div className="form-check" key={index}>
-                        <input className="form-check-input is-invalid" required type="checkbox" id={"flexCheckDefault2"+index} name='acepto_terminos' onClick={(e)=>handleEmpresaRegisterCheckTerms(e, index)}/>
+                        <input className="form-check-input is-invalid" required type="checkbox" id={"flexCheckDefault2"+index} name='acepto_terminos_condiciones' onClick={(e)=>handleEmpresaRegisterCheckTerms(e, index)}/>
                         <label className="form-check-label" htmlFor={"flexCheckDefault2"+index}>
                         Acepta términos y condiciones?
                         </label>
@@ -201,7 +192,7 @@ function SignUpEmpresa() {
               </div>
               <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12 mb-4 text-start">
               {
-                  usuarioRegister.map((element, index)=>(
+                  empresaRegister.map((element, index)=>(
                     element.politica_tratamiento === true ? (
                       <div className="form-check" key={index}>
                         <input className="form-check-input is-valid" type="checkbox" id={"flexCheckDefault3"+index} name='politica_tratamiento' onClick={(e)=>handleEmpresaRegisterCheckTerms(e, index)}/>
@@ -222,7 +213,7 @@ function SignUpEmpresa() {
                 }
               </div>
             </div>
-            {(sendingLogin || usuarioRegister[0].numero_documento==="" || empresaRegister[0].nombre_empresa==="" || empresaRegister[0].nombres_representante==="" || empresaRegister[0].apellidos_representante==="" || usuarioRegister[0].telefono_1==="" || usuarioRegister[0].politica_tratamiento===false || usuarioRegister[0].acepto_terminos===false || authRegister[0].email==="" || authRegister[0].password!==authRegister[0].confirm_password) ? (
+            {(sendingLogin || empresaRegister[0].num_doc==="" || empresaRegister[0].nombre_empresa==="" || empresaRegister[0].nombre_representante==="" || empresaRegister[0].apellidos_representatnte==="" || empresaRegister[0].telefono1==="" || empresaRegister[0].politica_tratamiento===false || empresaRegister[0].acepto_terminos_condiciones===false || authRegister[0].email==="" || authRegister[0].password!==authRegister[0].confirm_password) ? (
               <div className="d-grid gap-2">
                 <button className='btn btn-lg' disabled style={{backgroundColor: "#3366CC", color:"white"}}>Registrarme</button>
               </div>

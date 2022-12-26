@@ -1,0 +1,1 @@
+import{j as e,r as o,G as s}from"./index.b7187d75.js";function r(){return e("div",{children:"PostularEmpleados"})}function a(){const{getSession:t}=o.exports.useContext(s);return o.exports.useEffect(()=>{t("empleo-joven")},[]),e("div",{children:e(r,{})})}export{a as default};

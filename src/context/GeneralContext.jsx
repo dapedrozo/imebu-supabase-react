@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase/client";
+import { AuthInvalidCredentialsError, AuthRetryableFetchError } from "@supabase/supabase-js";
 
 export const GeneralContext = createContext();
 
@@ -23,6 +24,7 @@ export function GeneralContextProvider(props) {
     const [sendingLogin, setSendingLogin] = useState(false)
     const [currentNameUser, setCurrentNameUser] = useSessionStorage("username")
     const [currentTipoUser, setCurrentTipoUser] = useSessionStorage("tipoUser")
+
     async function errorHandler(error) {
       console.log(error);
       const map={
@@ -32,7 +34,7 @@ export function GeneralContextProvider(props) {
             title: <strong>Error!</strong>,
             html: (
               <i>
-                Upps.. parece que aún no te has registrado, no te preocupes, registrarte tomara solo un momento
+                Upps.. Los datos ingresados no son correctos, si aún no te has registrado no te preocupes, registrarte tomara solo un momento
               </i>
             ),
             icon: "error",
@@ -88,15 +90,28 @@ export function GeneralContextProvider(props) {
 
     async function getTiposDocumento(){
       try {
-        let { data: tipo_documento, error } = await supabase
-        .from('tipo_documento')
+        let { data: tipos_documento, error } = await supabase
+        .from('tipos_documento')
         .select('*')
         if(error)throw error
-        return tipo_documento
+        return tipos_documento
       } catch (error) {
         await errorHandler(error)
       }
     }
+    async function getCiiu(){
+      try {
+        let { data: ciiu, error } = await supabase
+          .from('ciiu')
+          .select('*')
+        if(error)throw error
+        return ciiu
+      } catch (error) {
+        await errorHandler(error)
+      }
+    }
+
+
     async function getTipoPersonaBanca(){
       try {
         let { data: tipo_persona_banca, error } = await supabase
@@ -174,24 +189,14 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
-    async function getCiiu(){
-      try {
-        let { data: ciiu, error } = await supabase
-          .from('ciiu')
-          .select('*')
-        if(error)throw error
-        return ciiu
-      } catch (error) {
-        await errorHandler(error)
-      }
-    }
+    
 
     async function verifyUserPersonaGeneralPerfil(id){
       try {
         let { data: persona_general_perfil, error } = await supabase
           .from('persona_general_perfil')
           .select('nombres')
-          .eq('id_usuario',id)
+          .eq('id_user',id)
         if(error) throw error
         return persona_general_perfil
       } catch (error) {
@@ -203,7 +208,7 @@ export function GeneralContextProvider(props) {
         let { data: empresa_general_perfil, error } = await supabase
           .from('empresa_general_perfil')
           .select('nombre_empresa')
-          .eq('id_usuario',id)
+          .eq('id_user',id)
         if(error) throw error
         return empresa_general_perfil
       } catch (error) {
@@ -280,17 +285,6 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
-    async function registerUsuarioSchema(usuarioObject){
-      try {
-        const { data, error } = await supabase
-          .from('usuarios')
-          .insert([usuarioObject])
-        if(error) throw error
-        return data
-      } catch (error) {
-        await errorHandler(error)
-      }
-    }
     async function registerPersonaSchema(personaObject){
       try {
         const { data, error } = await supabase
@@ -313,7 +307,7 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
-    async function registerPersonaGeneral(personaObject, authObject, usuarioObject){
+    async function registerPersonaGeneral(personaObject, authObject){
       try {
         if(authObject.confirm_password!==authObject.password) throw new Error("Las contraseñas no coinciden")
         const newAuthObject = {
@@ -321,9 +315,7 @@ export function GeneralContextProvider(props) {
           password:authObject.password
         }
         const user = await registerAuthSchema(newAuthObject)
-        personaObject.id_usuario=user.user.id
-        usuarioObject.id_usuario=user.user.id
-        await registerUsuarioSchema(usuarioObject)
+        personaObject.id_user=user.user.id
         await registerPersonaSchema(personaObject)
         let timerInterval
         await MySwal.fire({
@@ -353,7 +345,7 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
-    async function registerEmpresaGeneral(empresaObject, authObject, usuarioObject){
+    async function registerEmpresaGeneral(empresaObject, authObject){
       try {
         if(authObject.confirm_password!==authObject.password) throw new Error("Las contraseñas no coinciden")
         const newAuthObject = {
@@ -361,9 +353,7 @@ export function GeneralContextProvider(props) {
           password:authObject.password
         }
         const user = await registerAuthSchema(newAuthObject)
-        empresaObject.id_usuario=user.user.id
-        usuarioObject.id_usuario=user.user.id
-        await registerUsuarioSchema(usuarioObject)
+        empresaObject.id_user=user.user.id
         await registerEmpresaSchema(empresaObject)
         let timerInterval
         await MySwal.fire({
@@ -393,6 +383,40 @@ export function GeneralContextProvider(props) {
         await errorHandler(error)
       }
     }
+
+    async function getConvocatoriaActive(){
+      try {
+        let { data: convocatoria_empleo_joven, error } = await supabase
+        .from('convocatoria_empleo_joven')
+        .select('*')
+        .eq('estado',true)
+        if(error) throw error
+        return convocatoria_empleo_joven
+      } catch (error) {
+        await errorHandler(error)
+      }
+    }
+
+    async function saveDocumentosEmpleoJoven(documento){
+      try {
+        const session = await getSession()
+        console.log(session.session.user.id);
+        /*
+        const { data, error } = await supabase
+          .storage
+          .from('documentos')
+          .upload(`documentos_empresa_empleo_joven/${session.session.user.id}/${fecha_inicio}-${fecha_fin}/documentoIdentificacion.pdf`, archivo[0][0], {
+            cacheControl: '3600',
+            upsert: true
+          })
+        if(error)throw error
+        console.log(data)
+        */
+      } catch (error) {
+        await errorHandler(error)
+      }
+    }
+    
     
 
     return (
@@ -417,6 +441,7 @@ export function GeneralContextProvider(props) {
       registerPersonaGeneral,
       registerEmpresaGeneral,
       getSession,
+      saveDocumentosEmpleoJoven
     }}>
     {props.children}
     </GeneralContext.Provider>
